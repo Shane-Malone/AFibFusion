@@ -1,0 +1,2 @@
+This repo contains the code for feature extraction  nd classification of ECG signals for AFIB detection.
+Future versions will support fusion of ECGignals with PPG data.
