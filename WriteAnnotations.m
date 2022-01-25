@@ -9,7 +9,6 @@ Fs = 125;
 
 % For each file create an N by 1 vector of annotations
 % Create an N by 1 vector of sample locations for each annotaion
-% '[' means start of fibrillation and ']' means end
 
 % Each dataFile represents a signal of varying length
 dataFile = fgetl(recordFile);
@@ -27,17 +26,17 @@ while ischar(dataFile)
             if AFStatus == 1
                 OnsetTime = seconds(duration(annotations{i, 'OnsetTime_1'}));
                 OffsetTime = seconds(duration(annotations{i, 'OffsetTime_1'}));
-                startsample = OnsetTime;
-                endsample = OffsetTime;
+                startsample = OnsetTime*Fs;
+                endsample = OffsetTime*Fs;
                 
-                annsamples = startsample:endsample;
+                annsamples = [startsample endsample];
                 anntype = [];
-                comments = {'(AFIB'};
+                comments = {'A', 'N'};
                 wrann(annFilename, 'atr', annsamples, anntype, 0, 0, 0, comments)
             else
                 annsamples = 1;
                 anntype = [];
-                comments = {''};
+                comments = {'N'};
                 wrann(annFilename, 'atr', annsamples, anntype, 0, 0, 0, comments)
             end
             break
