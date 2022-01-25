@@ -1,4 +1,4 @@
-function [RRIntervalSet, sec_locs, final_sig_tab, signal2plot, ecgsqi_orig, ppgsqi_orig, ppg_wav_win, ecg_wav_win, ppgfin_sig_tab, ecgfin_sig_tab]= FusedRRFinder(ecgInput,ppgInput,Fs,delay)
+function [RRIntervalSet, sec_locs, final_sig_tab, signal2plot, ecgsqi_orig, ppgsqi_orig, ppg_wav_win, ecg_wav_win, ppgfin_sig_tab, ecgfin_sig_tab]= ECG_ABP_PPG_RRFinder(ecgInput,ppgInput,Fs,delay)
 
 %%%%signalorig -signal
 %%%%Fs- sampling frequnecy of signal

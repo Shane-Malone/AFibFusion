@@ -1,4 +1,4 @@
-function [RRIntervalSet, secondaryLocations, finalSignalTab, signal2plot, ecgWavWindow, ecgSignalTab]= RRFinder(signalOrig, Fs)
+function [RRIntervalSet, secondaryLocations, finalSignalTab, signal2plot, ecgWavWindow, ecgSignalTab]= ECGRRFinder(signalOrig, Fs)
 
 %%%%signalorig -signal
 %%%%Fs- sampling frequnecy of signal
