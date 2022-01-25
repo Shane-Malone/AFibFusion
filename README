@@ -1,2 +1,5 @@
-This repo contains the code for feature extraction  nd classification of ECG signals for AFIB detection.
-Future versions will support fusion of ECGignals with PPG data.
+#Thesis Code
+## Atrial Fibrillation Detection Using Fusion of ECG, PPG and ABP signals
+This repo contains the code for feature extraction and classification of AFib.
+
+The ExtractFeatures folder contains the code for assessing the SQI of each signal and extracting the RR intervals from combinations of these signals.
