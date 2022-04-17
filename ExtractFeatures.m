@@ -17,6 +17,7 @@ valueset = ["AF","NonAF"];
 dataFile = fgetl(recordFile);
 ecgLoc = fgetl(signalLocations);
 newRecord = true;
+
 while ischar(dataFile)
     windowSample = 1;
     dataFile = strrep(dataFile, '.hea', '');
@@ -41,7 +42,7 @@ while ischar(dataFile)
         continue
     end
 
-    [RRIntervalSet, secLocs] = RRFinder(signal(:,str2double(ecgLoc)), Fs); % Read entire set of intervals and corresponding samples
+    [RRIntervalSet, secLocs] = ECGRRFinder(signal(:,str2double(ecgLoc)), Fs); % Read entire set of intervals and corresponding samples
     
     if isempty(RRIntervalSet) % If no beats found move to next record
         startTime = startTime + lengthSegment;
@@ -99,4 +100,4 @@ while ischar(dataFile)
     
 end
 
-save('FeatureSetMIMIC20BeatsFixed', 'feature', 'AF')
+save('FeatureSets2\FeatureSetMIMIC20Beats', 'feature', 'AF')

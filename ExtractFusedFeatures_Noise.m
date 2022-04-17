@@ -19,7 +19,12 @@ newRecord = true;
 
 windowNum = 1;
 
+%for recordNum = [9, 14]
 while recordNum < size(SignalLocs, 1)
+    if recordNum ~= 9 && recordNum ~= 14
+        recordNum = recordNum + 1;
+        continue
+    end
     windowSample = 1;
     dataFile = SignalLocs{recordNum, 'Record'};
     dataFile = dataFile{1};
@@ -52,15 +57,16 @@ while recordNum < size(SignalLocs, 1)
         continue
     end
 
-    if windowNum == 1
-        ecgSig = awgn(signal(:,ecgLoc), -10);
-        %ppgSig = awgn(signal(:,ppgLoc), -20);
-    else
-        ecgSig = signal(:,ecgLoc);
-    end
-    ppgSig = signal(:,ppgLoc); % For now ppg always clean
+    ecgSig = signal(:,ecgLoc);
+    ppgSig = signal(:,ppgLoc);
 
-    [RRIntervalSet, secLocs] = FusedRRFinder(ecgSig, ppgSig, Fs, pulseDelay); % Read entire set of intervals and corresponding samples
+    SNR = -15;
+    if windowNum == 1
+        ecgSig = awgn(ecgSig, SNR);
+        %ppgSig = awgn(ppgSig, SNR);
+    end
+
+    [RRIntervalSet, secLocs] = ECG_PPG_RRFinder(ecgSig, ppgSig, Fs, pulseDelay); % Read entire set of intervals and corresponding samples
     
     if isempty(RRIntervalSet) % If no beats found move to next record
         startTime = startTime + lengthSegment;
@@ -117,4 +123,4 @@ while recordNum < size(SignalLocs, 1)
     
 end
 
-save('FusedFeatureSetMIMIC20Beats_Noisy_10dB', 'feature', 'AF')
+save('FeatureSets2/FusedFeatureSetMIMIC20Beats_15dB', 'feature', 'AF')

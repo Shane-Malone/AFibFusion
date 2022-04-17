@@ -1,11 +1,15 @@
-function [abpsqi]=Acsqi_calc(Abpsignal,signal_samplingrate,abpcurve,curvefreq)
-%%%%function to calculate curve matching sqi
-%%%Abpsignal - single channel Abpsignal
-%%%%signal_samplingrate - sampling frequency of the ecg signal
-%%% abp curve - curve against which correlation of each heartbeat section
-%%% is compared.
-%%% curvefreq - sampling rate of the curve
+% function to calculate curve matching sqi for ABP
 
+% Author - Shane Malone, Student Number 17308336
+% Credit - Arlene John for algorithm in other sqi functions
+
+% Abpsignal - single channel Abpsignal
+% signal_samplingrate - sampling frequency of the ecg signal
+% abp curve - curve against which correlation of each heartbeat section
+% is compared.
+% curvefreq - sampling rate of the curve
+
+function [abpsqi]=Acsqi_calc(Abpsignal,signal_samplingrate,abpcurve,curvefreq)
 
 if sum(Abpsignal)==0
     abpsqi=NaN(length(Abpsignal),1);
@@ -19,7 +23,7 @@ else
     abp_sqi=zeros(length(Abpsignal),1);
     abpcurve = resample(abpcurve,Fs,curvefreq);
     window_size=length(abpcurve);
-    Abpsignal2=[fliplr(Abpsignal(1:round(window_size/2))) Abpsignal fliplr(Abpsignal((length(Abpsignal)-round(window_size/2)):length(Abpsignal)))];%%%mirroring signal towards the beginning and end
+    Abpsignal2=[fliplr(Abpsignal(1:round(window_size/2))) Abpsignal fliplr(Abpsignal((length(Abpsignal)-round(window_size/2)):length(Abpsignal)))];% mirroring signal towards the beginning and end
 
     k=1;
     x=abpcurve';
@@ -28,7 +32,7 @@ else
     P=gallery('circul',y); % Generate circulant matrix(Toeplitz)
     P=P(1:window_size,:);
     lag=[-(window_size-1):1:window_size-1];
-    window=[Abpsignal2(max(1,k-round(window_size/2)+1):k-1) Abpsignal2(k) Abpsignal2(k+1:min(k+round(window_size/2)-1,length(Abpsignal2)))]; %%%mirroring signal towards the beginning and end
+    window=[Abpsignal2(max(1,k-round(window_size/2)+1):k-1) Abpsignal2(k) Abpsignal2(k+1:min(k+round(window_size/2)-1,length(Abpsignal2)))]; % mirroring signal towards the beginning and end
     if k-round(window_size/2)<1
             window=[zeros(1,round(window_size/2)-k) window];
     end
@@ -50,7 +54,7 @@ else
     else
         abpsqi(k)=0.014;
     end
-    if abpsqi(k)<0 %%%limiting negative SQI values to 0.0001
+    if abpsqi(k)<0 % limiting negative SQI values to 0.0001
         abpsqi(k)=0;
     end
     
@@ -77,10 +81,13 @@ else
         diff=var(corrected_curve-window);
         abp_sqi(k)=diff;
         abpsqi(k)=1/abp_sqi(k);
-        abpsqi(k)=5.026*log(abpsqi(k))+47.78; %%%from curve fitting
+
+        abpsqi(k)=5.026*log(abpsqi(k))+47.78; % from curve fitting
     
-        if abpsqi(k)<0 %%%limiting negative SQI values to 0.0001
-            abpsqi(k)=0;
+        if abpsqi(k)<0 % limiting negative SQI values to 0.0001
+            abpsqi(k)=0.0001;
+        elseif abpsqi(k) > 20
+            abpsqi(k) = 20;
         end
     end
     abpsqi=abpsqi(round((length(abpsqi)-length(Abpsignal))/2+1):round((length(abpsqi)+length(Abpsignal))/2));

@@ -7,7 +7,7 @@ numSets = 1;
 AF = cell(1); % Label for whole sequence
 feature = cell(1);
 windowSize = 20; % Beat intervals per window
-SNR = 0;
+SNR = -15;
 
 lengthSegment = 496 ; % Length in seconds of signal to work on at a time
 startTime = 0;
@@ -58,7 +58,7 @@ while ischar(dataFile)
         ecgSig = signal(:,str2double(ecgLoc));
     end
 
-    [RRIntervalSet, secLocs] = RRFinder(ecgSig, Fs); % Read entire set of intervals and corresponding samples
+    [RRIntervalSet, secLocs] = ECGRRFinder(ecgSig, Fs); % Read entire set of intervals and corresponding samples
     
     if isempty(RRIntervalSet) % If no beats found move to next record
         startTime = startTime + lengthSegment;
@@ -116,4 +116,4 @@ while ischar(dataFile)
     
 end
 
-save('FeatureSetMIMIC20Beats_Noisy_0dB', 'feature', 'AF')
+save('FeatureSets2/FeatureSetMIMIC20Beats_Noisy_15dB', 'feature', 'AF')

@@ -1,20 +1,20 @@
-function [RRIntervalSet, secondaryLocations, finalSignalTab, signal2plot, abpWavWindow, abpSignalTab]= ABPRRFinder(signalOrig, Fs)
+% ABPRRFinder - takes an input ABP signal, calculates wavelet sequence,
+% detects peaks then returns RR interval sequence
+% Author - Shane Malone, Student Number 17308336
+% Credit - Arlene John for algorithm and basic code structure
 
-%%%%signalorig -signal
-%%%%Fs- sampling frequnecy of signal
-signal(:,1) = double(signalOrig(round(2*Fs):end-round(2*Fs)+1)); % ABP signal ; start after 2 seconds
+function [RRIntervalSet, peakLocations, finalSignalTab, signal2plot, abpWavWindow, abpSignalTab]= ABPRRFinder(signalOrig, Fs)
+
+signal(:,1) = double(signalOrig(round(2*Fs):end-round(2*Fs)+1));
 signal(:,1) = signal(:,1)-mean(signal(:,1));
 
 abpSignal = signal(:,1)';
 lengthInput = length(abpSignal);
 
-% Load template curves
-%load('ecgdata1.mat');
-
 window_size = round(3*Fs)+1; % Choosing window size for processing
 k = 1;
 
-annotation = [0 0]; %%%pre allocating annotation variable for speed
+annotation = [0 0]; % pre allocating annotation variable for speed
 
 % Preparing the windowed wavelet coefficients
 abpWavWindow = [0];
@@ -22,7 +22,7 @@ finalSignalTab = zeros(lengthInput,1); % Tab of the final processed signal
 abpSignalTab = zeros(lengthInput,1);
 
 while k <= lengthInput
-    abpwindow = abpSignal(k:min(k+window_size-1, lengthInput)); % Ecg window
+    abpwindow = abpSignal(k:min(k+window_size-1, lengthInput)); % ABP window
     len = length(abpwindow);
     
     % If window size lower than selected window size
@@ -57,7 +57,7 @@ while k <= lengthInput
 
     abp_sig = abp_sig(round((length(abp_sig)-len)/2+1):round((length(abp_sig)+len)/2)); % adjust length to window length
     
-% ADDITIVE FUSION (ECG only)
+% ADDITIVE FUSION (ABP only)
    abpfin_sig = abp_sig;
    abpWavWindow = [abpWavWindow abp_sig];
     
@@ -90,49 +90,49 @@ end
 
 % Extract the detected peaks
 annotation=annotation(3:end);
+annotation = unique(annotation);
 % Check for false negatives and positives and correct
 
-secondaryLocations = [0];
+peakLocations = [0];
 
 for k = 1:length(annotation)-2
-    if secondaryLocations(end) >= annotation(k)% In case the position at the last position of secondaryLocations is greater than that of annotation
+    if peakLocations(end) >= annotation(k)% In case the position at the last position of secondaryLocations is greater than that of annotation
         continue
     end
-    rrinterval=(annotation(k+1)-annotation(k))/Fs; %%%%calculate rrinterval
+    rrinterval=(annotation(k+1)-annotation(k))/Fs; % calculate rrinterval
     t=0;
-    if rrinterval > 1.2 %%%if rrinterval is greter than 1.2 s, means missed beat
+    if rrinterval > 1.2 % if rrinterval is greater than 1.2 s, means missed beat
         signalwindow=finalSignalTab(annotation(k)+round(rrinterval*Fs/3):annotation(k+1)-round(rrinterval*Fs/3));
         if sum(signalwindow)~=0
             [~,idx_val]=max(signalwindow);
             hbloc=annotation(k)+idx_val+round(rrinterval*Fs/3);
-            secondaryLocations=[secondaryLocations annotation(k) hbloc];
+            peakLocations=[peakLocations annotation(k) hbloc];
             t=1;
         end  
     end
-    if rrinterval<0.3 %%%%if rrinterval is less than 0.4s,means false beat
-        if rrinterval<0.1 %%%%if two peaks within 0.1 s, take average
+    if rrinterval<0.3 % if rrinterval is less than 0.3s,means false beat
+        if rrinterval<0.1 % if two peaks within 0.1 s, take average
             hbloc=annotation(k+1);
-            secondaryLocations=[secondaryLocations hbloc];
+            peakLocations=[peakLocations hbloc];
             t=1;
         else
-            rrinterval2=(annotation(k+2)-annotation(k))/Fs; %%%%check interval between the next to next beat
-            if rrinterval2 < 1.2 %%%%if less than 1.2, omit k+1 location
-                secondaryLocations=[secondaryLocations annotation(k) annotation(k+2)];  
+            rrinterval2=(annotation(k+2)-annotation(k))/Fs; % check interval between the next to next beat
+            if rrinterval2 < 1.2 % if less than 1.2, omit k+1 location
+                peakLocations=[peakLocations annotation(k) annotation(k+2)];  
                 t=1;
             else
-                secondaryLocations=[secondaryLocations annotation(k)];%%%%else keep it for next round
+                peakLocations=[peakLocations annotation(k)]; % else keep it for next round
                 t=1;
             end
         end
     end
-    if t==0 %%%if no corrections made, just add at the end
-       secondaryLocations=[secondaryLocations annotation(k)]; 
+    if t==0 % if no corrections made, just add at the end
+       peakLocations=[peakLocations annotation(k)]; 
     end
 end
 
-secondaryLocations = [secondaryLocations annotation(k+1)];
-secondaryLocations = secondaryLocations(2:end);
-secondaryLocations = unique(secondaryLocations); % Final annotations
+peakLocations = [peakLocations annotation(k+1)];
+peakLocations = peakLocations(2:end);
 abpWavWindow = abpWavWindow(2:end);
 signal2plot = [abpSignal]'; % For plotting purpose
 
@@ -141,8 +141,8 @@ if(length(abpWavWindow) > length(finalSignalTab))
 end
 
 % Finally get rr interval
-RRIntervalSet = zeros(1, length(secondaryLocations)-1);
-for k = 1:length(secondaryLocations)-1
-    rrinterval = (secondaryLocations(k+1) - secondaryLocations(k))/Fs; %%%%calculate rrinterval
+RRIntervalSet = zeros(1, length(peakLocations)-1);
+for k = 1:length(peakLocations)-1
+    rrinterval = (peakLocations(k+1) - peakLocations(k))/Fs; % calculate rrinterval
     RRIntervalSet(k) = rrinterval;
 end

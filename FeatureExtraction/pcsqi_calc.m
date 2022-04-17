@@ -1,10 +1,17 @@
+% function to calculate curve matching sqi for PPG
+% PPGsignal - single channel Ecgsignal
+% psqi_calc returns the csqi value
+% Author - Arlene John, Shane Malone
+% Initial code developed by Arlene. Adapted for use in fusion algorithm by
+% Shane Malone.
+
+% signal_samplingrate - sampling frequency of the ecg signal
+% ecg curve - curve against which correlation of each heartbeat section
+% is compared.
+% curvefreq - sampling rate of the curve
+
 function [ppgsqi]=pcsqi_calc(ppgsignal,signal_samplingrate,ppgcurve,curvefreq)
-%%%%function to calculate curve matching sqi
-%%%ppgsignal - single channel ppgsignal
-%%%%signal_samplingrate - sampling frequency of the ppg signal
-%%% ppg curve - curve against which correlation of each heartbeat section
-%%% is compared.
-%%% curvefreq - sampling rate of the curve
+
 if sum(ppgsignal)==0
     ppgsqi=NaN(length(ppgsignal),1);
     ppg_sqi=NaN(length(ppgsignal),1);
@@ -17,7 +24,7 @@ else
     ppg_sqi=zeros(length(ppgsignal),1);
     ppgcurve = resample(ppgcurve,Fs,curvefreq);
     window_size=length(ppgcurve);
-    ppgsignal2=[fliplr(ppgsignal(1:round(window_size/2))) ppgsignal fliplr(ppgsignal((length(ppgsignal)-round(window_size/2)):length(ppgsignal)))];%%%mirroring signal towards the beginning and end
+    ppgsignal2=[fliplr(ppgsignal(1:round(window_size/2))) ppgsignal fliplr(ppgsignal((length(ppgsignal)-round(window_size/2)):length(ppgsignal)))];% mirroring signal towards the beginning and end
 
     k=1;
     x=ppgcurve';
@@ -26,7 +33,7 @@ else
     P=gallery('circul',y);
     P=P(1:window_size,:);
     lag=[-(window_size-1):1:window_size-1];
-    window=[ppgsignal2(max(1,k-round(window_size/2)+1):k-1) ppgsignal2(k) ppgsignal2(k+1:min(k+round(window_size/2)-1,length(ppgsignal2)))]; %%%mirroring signal towards the beginning and end
+    window=[ppgsignal2(max(1,k-round(window_size/2)+1):k-1) ppgsignal2(k) ppgsignal2(k+1:min(k+round(window_size/2)-1,length(ppgsignal2)))]; % mirroring signal towards the beginning and end
     if k-round(window_size/2)<1
             window=[zeros(1,round(window_size/2)-k) window];
     end
@@ -48,7 +55,7 @@ else
     else
         ppgsqi(k)=0.014;
     end
-    if ppgsqi(k)<0 %%%limiting negative SQI values to 0.0001
+    if ppgsqi(k)<0 % limiting negative SQI values to 0.0001
         ppgsqi(k)=0;
     end
     
@@ -75,10 +82,13 @@ else
         diff=var(corrected_curve-window);
         ppg_sqi(k)=diff;
         ppgsqi(k)=1/ppg_sqi(k);
-        ppgsqi(k)=5.9904*log(ppgsqi(k))+53.986; %%%from curve fitting
+
+        ppgsqi(k)=(4.26*10^-7)*exp(10.36*ppgsqi(k)); % Curve fitting
     
-        if ppgsqi(k)<0 %%%limiting negative SQI values to 0.0001
-            ppgsqi(k)=0;
+        if ppgsqi(k) <= 0 % limiting negative SQI values to 0.0001
+            ppgsqi(k)=0.0001;
+        elseif ppgsqi(k) > 20
+            ppgsqi(k) = 20;
         end
     end
     ppgsqi=ppgsqi(round((length(ppgsqi)-length(ppgsignal))/2+1):round((length(ppgsqi)+length(ppgsignal))/2));

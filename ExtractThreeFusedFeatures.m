@@ -1,5 +1,5 @@
 %% Extract RR Intervals for each waveform
-SignalLocs = readtable('ECG_PPG_SignalLocations.csv');
+SignalLocs = readtable('ECG_PPG_ABP_SignalLocationsUpdated.csv');
 Fs = 125;
 numSets = 1;
 AF = cell(1); % Label for whole sequence
@@ -14,22 +14,19 @@ maxStartTime = 120000; % Max of 10000 seconds per record
 valueset = ["AF","NonAF"];
 
 % Each dataFile represents a signal of varying length
-recordNum = 1;
-dataFile = SignalLocs{recordNum, 'Record'};
-dataFile = dataFile{1};
-ecgLoc = SignalLocs{recordNum, 'ECG'};
-ppgLoc = SignalLocs{recordNum, 'PPG'};
-pulseDelay = SignalLocs{recordNum, 'Delay'};
+recordNum = 4;
 newRecord = true;
 
 
-while recordNum < size(SignalLocs, 1)
+while recordNum < 6%size(SignalLocs, 1)
     windowSample = 1;
     dataFile = SignalLocs{recordNum, 'Record'};
     dataFile = dataFile{1};
     ecgLoc = SignalLocs{recordNum, 'ECG'};
     ppgLoc = SignalLocs{recordNum, 'PPG'};
-    pulseDelay = SignalLocs{recordNum, 'Delay'};
+    abpLoc = SignalLocs{recordNum, 'ABP'};
+    ppgDelay = SignalLocs{recordNum, 'Delay'};
+    abpDelay = SignalLocs{recordNum, 'ABPDelay'};
     dataFile = strrep(dataFile, '.hea', '');
     if newRecord
         fprintf(1, 'Now extracting RR from record: %s\n', dataFile);
@@ -51,7 +48,11 @@ while recordNum < size(SignalLocs, 1)
         continue
     end
 
-    [RRIntervalSet, secLocs] = ECG_PPG_RRFinder(signal(:,ecgLoc), signal(:,ppgLoc), Fs, pulseDelay); % Read entire set of intervals and corresponding samples
+    ppgInput = signal(:,ppgLoc);
+    ppgInput = ppgInput - min(ppgInput(:)); % Normalise ppg
+    ppgInput = ppgInput ./ max(ppgInput(:));
+
+    [RRIntervalSet, secLocs] = ECG_ABP_PPG_RRFinder(signal(:,ecgLoc), ppgInput, signal(:,abpLoc), Fs, ppgDelay, abpDelay); % Read entire set of intervals and corresponding samples
     
     if isempty(RRIntervalSet) % If no beats found move to next record
         startTime = startTime + lengthSegment;
@@ -108,4 +109,4 @@ while recordNum < size(SignalLocs, 1)
     
 end
 
-save('FusedFeatureSetMIMIC20Beats', 'feature', 'AF')
+save('FusedThreeFeatureSetMIMIC20Beats_1record', 'feature', 'AF')
